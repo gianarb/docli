@@ -4,7 +4,7 @@ import (
     "fmt"
     "github.com/codegangsta/cli"
     "os"
-    "../digitalocean-go"
+    "gitgub.com/gianarb/digitalocean-go"
 )
 
 func main() {
