@@ -4,7 +4,7 @@ import (
     "fmt"
     "github.com/codegangsta/cli"
     "os"
-    "github.com/gianarb/digitalocean-go"
+    "../digitalocean-go"
 )
 
 func main() {
@@ -15,9 +15,27 @@ func main() {
     var ImgStruct digitalocean.Image
     var DropletStruct digitalocean.Droplet
     var DropletsStruct digitalocean.Droplets
+    var RegionsStruct digitalocean.Regions
     var configuration Configuration
     configuration.Parse()
     app.Commands = []cli.Command{
+        {
+            Name:  "regions",
+            Usage: "List of regions",
+            Action: func(c *cli.Context) {
+                regions := RegionsStruct.List(configuration.Token) 
+                for _, img := range regions.Pool {
+                    fmt.Printf("%s \t %s \t %t \n", img.Name, img.Slug, img.Available) 
+                }
+            },
+            Flags: []cli.Flag {
+                cli.StringFlag {
+                    Name: "id",
+                    Value: "",
+                    Usage: "Resume single droples from id",
+                },
+            },
+        },
         {
             Name:  "images",
             Usage: "List of images",
