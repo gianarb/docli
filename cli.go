@@ -4,7 +4,8 @@ import (
     "fmt"
     "github.com/codegangsta/cli"
     "os"
-    "gitgub.com/gianarb/digitalocean-go"
+    "github.com/crackcomm/go-clitable"
+    "github.com/gianarb/digitalocean-go"
 )
 
 func main() {
@@ -24,9 +25,19 @@ func main() {
             Usage: "List of regions",
             Action: func(c *cli.Context) {
                 regions := RegionsStruct.List(configuration.Token) 
+                Table := clitable.New([]string{
+                    "Name",
+                    "Slug",
+                    "Available",
+                })
                 for _, img := range regions.Pool {
-                    fmt.Printf("%s \t %s \t %t \n", img.Name, img.Slug, img.Available) 
+                    Table.AddRow(map[string]interface{}{
+                        "Name": img.Name,
+                        "Slug": img.Slug,
+                        "Available": img.Available,
+                    })
                 }
+                Table.Print()
             },
             Flags: []cli.Flag {
                 cli.StringFlag {
@@ -46,9 +57,23 @@ func main() {
                     return 
                 }
                 images := ImgsStruct.List(configuration.Token) 
+                Table := clitable.New([]string{
+                    "Id",
+                    "Name",
+                    "Slug",
+                    "Public",
+                    "Created",
+                })
                 for _, img := range images.Pool {
-                    fmt.Printf("%d \t %s \t %s \t %t \t %s \n", img.Id, img.Name, img.Slug, img.Public, img.Created) 
+                    Table.AddRow(map[string]interface{}{
+                        "Id": img.Id,
+                        "Name": img.Name,
+                        "Splug": img.Slug,
+                        "Public": img.Public,
+                        "Created": img.Created,
+                    })
                 }
+                Table.Print()
             },
             Flags: []cli.Flag {
                 cli.StringFlag {
@@ -92,10 +117,26 @@ func main() {
                 if len(droplets.Pool) == 0 {
                         fmt.Printf("Zero droplets found\n") 
                 } else {
-                    fmt.Printf("ID \t NAME \t IP \t Mamory \t CPU \t DISK \t IMAGE NAME \n\n") 
+                    Table := clitable.New([]string{
+                        "Id",
+                        "Name",
+                        "Memory",
+                        "Vcpus",
+                        "Disk",
+                        "Image",
+                    })
                     for _, dp := range droplets.Pool {
+                        Table.AddRow(map[string]interface{}{
+                            "Id": dp.Id,
+                            "Name": dp.Name,
+                            "Memory": dp.Memory,
+                            "Vcpus": dp.Vcpus,
+                            "Disk": dp.Disk,
+                            "Image": dp.Image.Name,
+                        })
                         fmt.Printf("%d \t %s \t %s \t %d \t %d \t %d \t %s \n", dp.Id, dp.Name, dp.Ip, dp.Memory, dp.Vcpus, dp.Disk, dp.Image.Name) 
                     }
+                    Table.Print()
                 }
             },
             Flags: []cli.Flag {
