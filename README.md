@@ -20,6 +20,7 @@ Read help after build
 ./digitalocean-cli
 ```
 
+* List of regions: ```./digitalocean-cli regions```
 * List of images: ```./digitalocean-cli images```
 * Single image: ```./digitalocean-cli images --id=idimage```
 * Lost of droplets: ```./digitalocean-cli dropltes```
@@ -31,5 +32,5 @@ Read help after build
 * Power Off droplet: ```./digitalocean-cli dropltes --id=idDroplet --action=power_off```
 
 Contribute please!
-[digitalocean-go](http://github.com/gianarb/digitalbees-go) is dependency for manage digitalocean api integration
+[digitalocean-go](http://github.com/gianarb/digitalocean-go) is dependency for manage digitalocean api integration
  
