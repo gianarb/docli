@@ -217,6 +217,7 @@ func main() {
                         "Name",
                         "Memory",
                         "Vcpus",
+                        "Ip",
                         "Disk",
                         "Image",
                     })
@@ -226,10 +227,10 @@ func main() {
                             "Name": dp.Name,
                             "Memory": dp.Memory,
                             "Vcpus": dp.Vcpus,
+                            "Ip": dp.Networks.V4[0].IpAddress,
                             "Disk": dp.Disk,
                             "Image": dp.Image.Name,
                         })
-                        fmt.Printf("%d \t %s \t %s \t %d \t %d \t %d \t %s \n", dp.Id, dp.Name, dp.Ip, dp.Memory, dp.Vcpus, dp.Disk, dp.Image.Name) 
                     }
                     Table.Print()
                 }
