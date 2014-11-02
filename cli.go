@@ -16,7 +16,6 @@ func main() {
     app.Usage = "Digitalocean in your command line"
     var ImgStruct digitalocean.Image
     var KeyStruct digitalocean.Key
-    var KeysStruct digitalocean.Keys
     var DropletStruct digitalocean.Droplet
     var configuration Configuration
     configuration.Parse()
@@ -104,7 +103,6 @@ func main() {
                     var request digitalocean.KeyRequest
                     request.Name = c.String("name")
                     request.Public_key = c.String("ssh_key")
-                    
                     data := KeyStruct.Create(request, configuration.Token);
                     fmt.Printf("%s \n", data)
                     return
@@ -119,12 +117,22 @@ func main() {
                     fmt.Printf("%s \n", keyString);
                     return 
                 }
-                keys := KeysStruct.List(configuration.Token) 
-                for _, k := range keys.Pool {
-                        fmt.Printf("Id: %d \n",  k.Id)
+                opt := &godo.ListOptions{}
+                for {
+                    keys, resp, _ := client.Keys.List(opt)
+                    for _, k := range keys {
+                        fmt.Printf("Id: %d \n",  k.ID)
                         fmt.Printf("Name: %s \n", k.Name)
                         fmt.Printf("Fingerprint: %s \n", k.Fingerprint)
                         fmt.Printf("PublicKey: %s \n\n", k.PublicKey)
+                    }
+                    if resp.Links.IsLastPage() {
+                        break
+                    }
+
+                    page, _ := resp.Links.CurrentPage()
+
+                    opt.Page = page + 1
                 }
             },
             Flags: []cli.Flag {
