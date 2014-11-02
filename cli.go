@@ -14,12 +14,10 @@ func main() {
     app := cli.NewApp()
     app.Name = "docli"
     app.Usage = "Digitalocean in your command line"
-    var ImgsStruct digitalocean.Images
     var ImgStruct digitalocean.Image
     var KeyStruct digitalocean.Key
     var KeysStruct digitalocean.Keys
     var DropletStruct digitalocean.Droplet
-    var DropletsStruct digitalocean.Droplets
     var configuration Configuration
     configuration.Parse()
 
@@ -97,13 +95,6 @@ func main() {
                 }
                 Table.Print()
             },
-            Flags: []cli.Flag {
-                cli.StringFlag {
-                    Name: "id",
-                    Value: "",
-                    Usage: "Resume single droples from id",
-                },
-            },
         },
         {
             Name:  "keys",
@@ -173,24 +164,36 @@ func main() {
                     fmt.Printf("%s \n", imageString);
                     return 
                 }
-                images := ImgsStruct.List(configuration.Token) 
+
+
                 Table := clitable.New([]string{
                     "Id",
                     "Name",
                     "Slug",
                     "Public",
-                    "Created",
                 })
-                for _, img := range images.Pool {
-                    Table.AddRow(map[string]interface{}{
-                        "Id": img.Id,
-                        "Name": img.Name,
-                        "Splug": img.Slug,
-                        "Public": img.Public,
-                        "Created": img.Created,
-                    })
+                opt := &godo.ListOptions{}
+                for {
+                    images, resp, _ := client.Images.List(opt)
+                    for _, img := range images {
+                        Table.AddRow(map[string]interface{}{
+                            "Id": img.ID,
+                            "Name": img.Name,
+                            "Splug": img.Slug,
+                            "Public": img.Public,
+                        })
+                    }
+                    if resp.Links.IsLastPage() {
+                        break
+                    }
+
+                    page, _ := resp.Links.CurrentPage()
+
+                    // set the page we want for the next request
+                    opt.Page = page + 1
                 }
                 Table.Print()
+
             },
             Flags: []cli.Flag {
                 cli.StringFlag {
@@ -235,32 +238,43 @@ func main() {
                     fmt.Printf("%s \n", data)
                     return
                 }
-                droplets := DropletsStruct.List(configuration.Token)      
-                if len(droplets.Pool) == 0 {
+                Table := clitable.New([]string{
+                    "Id",
+                    "Name",
+                    "Memory",
+                    "Vcpus",
+                    "Ip",
+                    "Disk",
+                    "Image",
+                })
+                opt := &godo.ListOptions{}
+                for {
+                    droplets, resp, _ := client.Droplets.List(opt)
+                    if len(droplets) == 0 {
                         fmt.Printf("Zero droplets found\n") 
-                } else {
-                    Table := clitable.New([]string{
-                        "Id",
-                        "Name",
-                        "Memory",
-                        "Vcpus",
-                        "Ip",
-                        "Disk",
-                        "Image",
-                    })
-                    for _, dp := range droplets.Pool {
+                        return
+                    }
+                    for _, dp := range droplets {
                         Table.AddRow(map[string]interface{}{
-                            "Id": dp.Id,
+                            "Id": dp.ID,
                             "Name": dp.Name,
                             "Memory": dp.Memory,
                             "Vcpus": dp.Vcpus,
-                            "Ip": dp.Networks.V4[0].IpAddress,
+                            "Ip": dp.Networks.V4[0].IPAddress,
                             "Disk": dp.Disk,
                             "Image": dp.Image.Name,
                         })
                     }
-                    Table.Print()
+                    if resp.Links.IsLastPage() {
+                        break
+                    }
+
+                    page, _ := resp.Links.CurrentPage()
+
+                    // set the page we want for the next request
+                    opt.Page = page + 1
                 }
+                Table.Print()
             },
             Flags: []cli.Flag {
                 cli.StringFlag {
