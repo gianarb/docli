@@ -6,11 +6,13 @@ import (
     "os"
     "github.com/crackcomm/go-clitable"
     "github.com/gianarb/digitalocean-go"
+    "code.google.com/p/goauth2/oauth"
+    "github.com/digitalocean/godo"
 )
 
 func main() {
     app := cli.NewApp()
-    app.Name = "digitalocean-cli"
+    app.Name = "docli"
     app.Usage = "Digitalocean in your command line"
     var ImgsStruct digitalocean.Images
     var ImgStruct digitalocean.Image
@@ -19,34 +21,48 @@ func main() {
     var DropletStruct digitalocean.Droplet
     var DropletsStruct digitalocean.Droplets
     var RegionsStruct digitalocean.Regions
-    var SizesStruct digitalocean.Sizes
     var configuration Configuration
     configuration.Parse()
+
+    t := &oauth.Transport{
+        Token: &oauth.Token{AccessToken: configuration.Token},
+    }
+    client := godo.NewClient(t.Client())
+
     app.Commands = []cli.Command{
         {
             Name:  "sizes",
             Usage: "List of sizes",
             Action: func(c *cli.Context) {
-                sizes := SizesStruct.List(configuration.Token) 
                 Table := clitable.New([]string{
                     "Slug",
                     "Memory",
                     "Vcpus",
                     "Disks",
-                    "Transfer",
                     "Price monthly",
                     "Price hourly",
                 })
-                for _, size := range sizes.Pool {
-                    Table.AddRow(map[string]interface{}{
-                        "Slug": size.Slug,
-                        "Memory": size.Memory,
-                        "Vcpus": size.Vcpus,
-                        "Disks": size.Disks,
-                        "Transfer": size.Trasnfer,
-                        "Price monthly": size.PriceMonthly,
-                        "Price hourly": size.PriceHourly,
-                    })
+                opt := &godo.ListOptions{}
+                for {
+                    sizes, resp, _ := client.Sizes.List(opt)
+                    for _, size := range sizes {
+                        Table.AddRow(map[string]interface{}{
+                            "Slug": size.Slug,
+                            "Memory": size.Memory,
+                            "Vcpus": size.Vcpus,
+                            "Disks": size.Disk,
+                            "Price monthly": size.PriceMonthly,
+                            "Price hourly": size.PriceHourly,
+                        })
+                    }
+                    if resp.Links.IsLastPage() {
+                        break
+                    }
+
+                    page, _ := resp.Links.CurrentPage()
+
+                    // set the page we want for the next request
+                    opt.Page = page + 1
                 }
                 Table.Print()
             },
@@ -55,7 +71,7 @@ func main() {
             Name:  "regions",
             Usage: "List of regions",
             Action: func(c *cli.Context) {
-                regions := RegionsStruct.List(configuration.Token) 
+                regions := RegionsStruct.List(configuration.Token)
                 Table := clitable.New([]string{
                     "Name",
                     "Slug",
