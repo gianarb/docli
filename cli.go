@@ -20,7 +20,6 @@ func main() {
     var KeysStruct digitalocean.Keys
     var DropletStruct digitalocean.Droplet
     var DropletsStruct digitalocean.Droplets
-    var RegionsStruct digitalocean.Regions
     var configuration Configuration
     configuration.Parse()
 
@@ -71,18 +70,30 @@ func main() {
             Name:  "regions",
             Usage: "List of regions",
             Action: func(c *cli.Context) {
-                regions := RegionsStruct.List(configuration.Token)
                 Table := clitable.New([]string{
                     "Name",
                     "Slug",
                     "Available",
                 })
-                for _, img := range regions.Pool {
-                    Table.AddRow(map[string]interface{}{
-                        "Name": img.Name,
-                        "Slug": img.Slug,
-                        "Available": img.Available,
-                    })
+
+                opt := &godo.ListOptions{}
+                for {
+                    regions, resp, _ := client.Regions.List(opt)
+                    for _, r := range regions {
+                        Table.AddRow(map[string]interface{}{
+                            "Name": r.Name,
+                            "Slug": r.Slug,
+                            "Available": r.Available,
+                        })
+                    }
+                    if resp.Links.IsLastPage() {
+                        break
+                    }
+
+                    page, _ := resp.Links.CurrentPage()
+
+                    // set the page we want for the next request
+                    opt.Page = page + 1
                 }
                 Table.Print()
             },
