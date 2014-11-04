@@ -110,7 +110,7 @@ func main() {
                 if c.String("delete") != "" {
                     KeyStruct.Delete(c.String("delete"), configuration.Token)
                     println("Key deleted")
-                    return 
+                    return
                 }
                 if c.String("id") != "" {
                     keyString := KeyStruct.Single(c.String("id"), configuration.Token)
@@ -226,13 +226,19 @@ func main() {
                     return
                 }
                 if c.String("delete") != "" {
-                    DropletStruct.Delete(c.String("delete"), configuration.Token)
+                    client.Droplets.Delete(c.Int("delete"))
                     println("Droplet deleted")
                     return
                 }
                 if c.String("id") != "" {
-                    dropletString := DropletStruct.Single(c.String("id"), configuration.Token)
-                    fmt.Printf("%s \n", dropletString);
+                    droplet, _, _ := client.Droplets.Get(c.Int("id"))
+                    fmt.Printf("ID: %d \n", droplet.Droplet.ID);
+                    fmt.Printf("Name: %s \n", droplet.Droplet.Name);
+                    fmt.Printf("Memory: %d mb \n", droplet.Droplet.Memory);
+                    fmt.Printf("Vcpu: %d \n", droplet.Droplet.Vcpus);
+                    fmt.Printf("Region: %s \n", droplet.Droplet.Region.Name);
+                    fmt.Printf("Status: %s \n", droplet.Droplet.Status);
+                    fmt.Printf("IP: %s \n", droplet.Droplet.Networks.V4[0].IPAddress);
                     return
                 }
                 if c.String("name") != "" {
