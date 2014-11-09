@@ -15,7 +15,6 @@ func main() {
     app.Name = "docli"
     app.Usage = "Digitalocean in your command line"
     var ImgStruct digitalocean.Image
-    var KeyStruct digitalocean.Key
     var DropletStruct digitalocean.Droplet
     var configuration Configuration
     configuration.Parse()
@@ -54,10 +53,7 @@ func main() {
                     if resp.Links.IsLastPage() {
                         break
                     }
-
                     page, _ := resp.Links.CurrentPage()
-
-                    // set the page we want for the next request
                     opt.Page = page + 1
                 }
                 Table.Print()
@@ -72,7 +68,6 @@ func main() {
                     "Slug",
                     "Available",
                 })
-
                 opt := &godo.ListOptions{}
                 for {
                     regions, resp, _ := client.Regions.List(opt)
@@ -86,10 +81,7 @@ func main() {
                     if resp.Links.IsLastPage() {
                         break
                     }
-
                     page, _ := resp.Links.CurrentPage()
-
-                    // set the page we want for the next request
                     opt.Page = page + 1
                 }
                 Table.Print()
@@ -100,21 +92,31 @@ func main() {
             Usage: "List of keys",
             Action: func(c *cli.Context) {
                 if c.String("name") != "" && c.String("ssh_key") != "" {
-                    var request digitalocean.KeyRequest
+                    request := &godo.KeyCreateRequest{};
                     request.Name = c.String("name")
-                    request.Public_key = c.String("ssh_key")
-                    data := KeyStruct.Create(request, configuration.Token);
-                    fmt.Printf("%s \n", data)
+                    request.PublicKey = c.String("ssh_key")
+                    k, _, err := client.Keys.Create(request);
+                    if err != nil {
+                        fmt.Printf("ErrErr  %s \n", err)
+                        return
+                    }
+                    fmt.Printf("Id: %d \n",  k.ID)
+                    fmt.Printf("Name: %s \n", k.Name)
+                    fmt.Printf("Fingerprint: %s \n", k.Fingerprint)
+                    fmt.Printf("PublicKey: %s \n\n", k.PublicKey)
                     return
                 }
                 if c.String("delete") != "" {
-                    KeyStruct.Delete(c.String("delete"), configuration.Token)
+                    client.Keys.DeleteByID(c.Int("delete"))
                     println("Key deleted")
                     return
                 }
                 if c.String("id") != "" {
-                    keyString := KeyStruct.Single(c.String("id"), configuration.Token)
-                    fmt.Printf("%s \n", keyString);
+                    k, _, _ := client.Keys.GetByID(c.Int("id"))
+                    fmt.Printf("Id: %d \n",  k.ID)
+                    fmt.Printf("Name: %s \n", k.Name)
+                    fmt.Printf("Fingerprint: %s \n", k.Fingerprint)
+                    fmt.Printf("PublicKey: %s \n\n", k.PublicKey)
                     return 
                 }
                 opt := &godo.ListOptions{}
@@ -152,7 +154,7 @@ func main() {
                     Usage: "Name of new droplet",
                 },
                 cli.StringFlag {
-                    Name: "ssh_key, m",
+                    Name: "ssh_key, s",
                     Value: "1601",
                     Usage: "Id of image",
                 },
